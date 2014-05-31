@@ -60,25 +60,23 @@ function undoCommand() {
 		autorun = 1
 	}
 	if (/git clone/) {
-		var outputfolder = null
-		var cloned_into = cmd.split("git clone ")[1].split(" ")
-		if(cloned_into.length > 1){
+		cloned = split(remove_options(substr($0, 11)), cloned_into, / /) # remove "git clone " prefix
+		if (cloned > 1) {
 			# specified output folder
-			outputfolder = cloned_into[1]
-		}
-		else{
+			outputfolder = cloned_into[2]
+		} else {
 			# default output folder
 			# extract from remote - for example https://github.com/mapmeld/gitjk.git
-			outputfolder = cloned_into[0].split("/")
-			outputfolder = outputfolder[outputfolder.length-1]
-			outputfolder = outputfolder.split(".git")[0]
+			urln = split(cloned_into[1], url, /\//)
+			outputfolder = url[urln]
+			sub(/\.git$/, "", outputfolder)
 		}
 		info = "This downloaded a repo and all of its git history to a folder. You can remove it."
-		if(outputfolder && outputfolder.length && outputfolder.indexOf("..") == -1){
-			undo = "rm -rf ./" + outputfolder.replace(" ", "\\ ")
+		if (outputfolder && length(outputfolder) && !match(outputfolder, /\.\./)) {
+			gsub(/ /, "\\ ", outputfolder)
+			undo = "rm -rf ./" outputfolder
 			autorun = 1
-		}
-		else{
+		} else {
 			info += "\nCouldn't figure out what folder this was downloaded to."
 			autorun = 0
 		}
