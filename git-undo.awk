@@ -82,30 +82,31 @@ function undoCommand() {
 		}
 	}
 	if (/git add/) {
-		var filenames = remove_options(substr($0, 9)) # remove "git add " prefix
+		filenames = remove_options(substr($0, 9)) # remove "git add " prefix
 		info = "This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system."
-		if(filenames.indexOf(".") > -1 || filenames.indexOf("*") > -1){
+		if (match(filenames, /[ ^]\.[$ ]/) || match(filenames, /\*/)) {
 			info += "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add."
 			autorun = 0
 		}
 		else{
-			undo = "git reset " + filenames.join(" ")
+			undo = "git reset " filenames
 			autorun = 1
 		}
 	}
 	if (/git rm/) {
-		filenames = cmd.split("git rm ")[1]
+		filenames = remove_options(substr($0, 8)) # remove "git rm " prefix
 		if(/--cached/){
 			info = "This took files out of the changes staged for commit. All changes will be re-added to staging for this commit."
-			undo = "git add " + filenames.replace("--cached", "")
+			undo = "git add " filenames
 		}
 		else{
 			info = "Don't panic, but this deleted files from the file system. They're not in the recycle bin; they're gone. These files can be restored from your last commit, but uncommited changes were lost."
-			undo = "git checkout HEAD " + filenames
+			undo = "git checkout HEAD " filenames
 		}
 		autorun = 1
 	}
 	if (/git mv/) {
+		filenames = remove_options(substr($0, 8)) # remove "git mv " prefix
 		var old_name = cmd.split("git mv ")[1].split(" ")[0]
 		var new_name = cmd.split("git mv ")[1].split(" ")[1]
 		info = "This moved the file (named " + old_name + ") to " + new_name + ". It can be moved back."
