@@ -25,6 +25,12 @@ function getFileNames(cmd) {
 	return parts;
 }
 
+{
+	gsub(/[ \t]+/, " ", $0)
+	gsub(/\r?\n|\r/, " ", $0)
+	gsub(/(^ )|( $)/, "", $0)
+}
+
 /git / {
 	undoCommand($0, function(err, info, command, autorun){
 		if(info){
@@ -57,7 +63,6 @@ function getFileNames(cmd) {
 }
 
 function undoCommand(cmd, callback) {
-	var cmd = cmd.replace(/\r?\n|\r/g, " ").replace(/\s\s+/g, " ").replace(/\s$/, "");
 	var info = null;
 	var undo = null;
 	var autorun = 0;
