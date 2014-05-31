@@ -1,28 +1,28 @@
 #! /usr/bin/env node
 
 # requirements
-var program = require('commander');
-var exec = require('child_process').exec;
+var program = require("commander");
+var exec = require("child_process").exec;
 
 # command line options
 program
-	.version('0.0.11')
-	.option('-f', '--fix', 'attempt to fix')
+	.version("0.0.11")
+	.option("-f", "--fix", "attempt to fix")
 	.parse(process.argv);
 
 # get last command
 var foundGit = false;
 process.stdin.resume();
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', function(last_lines) {
-	if(last_lines.indexOf('git ') == -1){
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", function(last_lines) {
+	if(last_lines.indexOf("git ") == -1){
 		return;
 	}
-	last_lines = last_lines.split('\n');
+	last_lines = last_lines.split("\n");
 
 	for(var a=0; a < last_lines.length; a++){
 		var initial_command = last_lines[a];
-		if(initial_command.indexOf('git ') == -1){
+		if(initial_command.indexOf("git ") == -1){
 			continue;
 		}
 		undoCommand(initial_command, function(err, info, command, autorun){
@@ -34,10 +34,10 @@ process.stdin.on('data', function(last_lines) {
 				return;
 			}
 			if(command){
-				if((program.rawArgs.indexOf('-f') > -1 || program.rawArgs.indexOf('--fix') > -1) && autorun){
-					console.log('Running ' + command);
+				if((program.rawArgs.indexOf("-f") > -1 || program.rawArgs.indexOf("--fix") > -1) && autorun){
+					console.log("Running " + command);
 					exec(command, function(){
-						console.log('Completed');
+						console.log("Completed");
 					});
 				}
 				else{
@@ -55,7 +55,7 @@ process.stdin.on('data', function(last_lines) {
 		break;
 	}
 });
-process.stdin.on('end', function() {
+process.stdin.on("end", function() {
 	if(!foundGit){
 		console.log("I didn't find a git command");
 	}
@@ -73,20 +73,20 @@ var getFileNames = function(cmd){
 
 var undoCommand = function(cmd, callback){
 	try{
-		var cmd = cmd.replace(/\r?\n|\r/g, ' ').replace(/\s\s+/g, ' ').replace(/\s$/, '');
+		var cmd = cmd.replace(/\r?\n|\r/g, " ").replace(/\s\s+/g, " ").replace(/\s$/, "");
 		var info = null;
 		var undo = null;
 		var autorun = false;
 
 		/git init/ {
-			info = 'This created a .git folder in the current directory. You can remove it.';
-			undo = 'rm -rf .git';
+			info = "This created a .git folder in the current directory. You can remove it.";
+			undo = "rm -rf .git";
 			autorun = true;
 		}
 
 		/git clone/ {
 			var outputfolder = null;
-			var cloned_into = cmd.split('git clone ')[1].split(' ');
+			var cloned_into = cmd.split("git clone ")[1].split(" ");
 			if(cloned_into.length > 1){
 				# specified output folder
 				outputfolder = cloned_into[1];
@@ -96,12 +96,12 @@ var undoCommand = function(cmd, callback){
 				# extract from remote - for example https://github.com/mapmeld/gitjk.git
 				outputfolder = cloned_into[0].split("/");
 				outputfolder = outputfolder[outputfolder.length-1];
-				outputfolder = outputfolder.split('.git')[0];
+				outputfolder = outputfolder.split(".git")[0];
 			}
 
-			info = 'This downloaded a repo and all of its git history to a folder. You can remove it.';
+			info = "This downloaded a repo and all of its git history to a folder. You can remove it.";
 			if(outputfolder && outputfolder.length && outputfolder.indexOf("..") == -1){
-				undo = 'rm -rf ./' + outputfolder.replace(' ', '\\ ');
+				undo = "rm -rf ./" + outputfolder.replace(" ", "\\ ");
 				autorun = true;
 			}
 			else{
@@ -111,109 +111,109 @@ var undoCommand = function(cmd, callback){
 		}
 
 		/git add/ {
-			var filenames = getFileNames(cmd.split('git add ')[1]);
-			info = 'This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system.';
-			if(filenames.indexOf('.') > -1 || filenames.indexOf('*') > -1){
+			var filenames = getFileNames(cmd.split("git add ")[1]);
+			info = "This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system.";
+			if(filenames.indexOf(".") > -1 || filenames.indexOf("*") > -1){
 				info += "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add.";
 				autorun = false;
 			}
 			else{
-				undo = 'git reset ' + filenames.join(' ');
+				undo = "git reset " + filenames.join(" ");
 				autorun = true;
 			}
 		}
 
 		/git rm/ {
-			filenames = cmd.split('git rm ')[1];
+			filenames = cmd.split("git rm ")[1];
 			if(/--cached/){
-				info = 'This took files out of the changes staged for commit. All changes will be re-added to staging for this commit.';
-				undo = 'git add ' + filenames.replace('--cached', '');
+				info = "This took files out of the changes staged for commit. All changes will be re-added to staging for this commit.";
+				undo = "git add " + filenames.replace("--cached", "");
 			}
 			else{
 				info = "Don't panic, but this deleted files from the file system. They're not in the recycle bin; they're gone. These files can be restored from your last commit, but uncommited changes were lost.";
-				undo = 'git checkout HEAD ' + filenames;
+				undo = "git checkout HEAD " + filenames;
 			}
 			autorun = true;
 		}
 
 		/git mv/ {
-			var old_name = cmd.split('git mv ')[1].split(' ')[0];
-			var new_name = cmd.split('git mv ')[1].split(' ')[1];
-			info = 'This moved the file (named ' + old_name + ') to ' + new_name + '. It can be moved back.';
-			undo = 'git mv ' + new_name + ' ' + old_name;
+			var old_name = cmd.split("git mv ")[1].split(" ")[0];
+			var new_name = cmd.split("git mv ")[1].split(" ")[1];
+			info = "This moved the file (named " + old_name + ") to " + new_name + ". It can be moved back.";
+			undo = "git mv " + new_name + " " + old_name;
 			autorun = true;
 		}
 
 		/git checkout/ {
-			info = 'git checkout moved you into a different branch of the repo. You can checkout any branch by name, or checkout the last one using -';
-			undo = 'git checkout -';
+			info = "git checkout moved you into a different branch of the repo. You can checkout any branch by name, or checkout the last one using -";
+			undo = "git checkout -";
 			autorun = true;
 		}
 
 		/git remote add/ {
-			var repo_name = cmd.split('git remote add ')[1].split(' ')[0];
-			var repo_url = cmd.split('git remote add ')[1].split(' ')[1];
+			var repo_name = cmd.split("git remote add ")[1].split(" ")[0];
+			var repo_url = cmd.split("git remote add ")[1].split(" ")[1];
 
-			info = 'This added a remote repo (named ' + repo_name + ') pointing to ' + repo_url;
+			info = "This added a remote repo (named " + repo_name + ") pointing to " + repo_url;
 			info += "\nIt can be removed.";
-			undo = 'git remote rm ' + repo_name;
+			undo = "git remote rm " + repo_name;
 			autorun = true;
 		}
 
 		/git remote remove/ || /git remote rm/ {
-			var repo_name = cmd.split('git remote ')[1].split(' ')[1];
+			var repo_name = cmd.split("git remote ")[1].split(" ")[1];
 
-			info = 'This removed a remote repo (named ' + repo_name + ')';
+			info = "This removed a remote repo (named " + repo_name + ")";
 			info += "\nIt needs to be added back using git remote add " + repo_name + " <git-url>";
 			autorun = false;
 		}
 
 		/git remote set-url/ {
-			var repo_name = cmd.split('git remote set-url ')[1].split(' ')[0];
-			var repo_url = cmd.split('git remote set-url ')[1].split(' ')[1];
+			var repo_name = cmd.split("git remote set-url ")[1].split(" ")[0];
+			var repo_url = cmd.split("git remote set-url ")[1].split(" ")[1];
 
-			info = 'This changed the remote repo (named ' + repo_name + ') to point to ' + repo_url;
+			info = "This changed the remote repo (named " + repo_name + ") to point to " + repo_url;
 			info += "\nIt can be removed (using git remote rm) or set again (using git remote set-url).";
 			autorun = false;
 		}
 
 		/git remote rename/ {
-			var old_name = cmd.split('git remote rename ')[1].split(' ')[0];
-			var new_name = cmd.split('git remote rename ')[1].split(' ')[1];
-			info = 'This changed the remote repo (named ' + old_name + ') to have the name ' + new_name + '. It can be reset.';
-			undo = 'git remote rename ' + new_name + ' ' + old_name;
+			var old_name = cmd.split("git remote rename ")[1].split(" ")[0];
+			var new_name = cmd.split("git remote rename ")[1].split(" ")[1];
+			info = "This changed the remote repo (named " + old_name + ") to have the name " + new_name + ". It can be reset.";
+			undo = "git remote rename " + new_name + " " + old_name;
 			autorun = true;
 		}
 
 		/git commit/ {
-			info = 'This saved your staged changes as a commit, which can be updated with git commit --amend or completely uncommited:';
-			undo = "git reset --soft 'HEAD^'";
+			info = "This saved your staged changes as a commit, which can be updated with git commit --amend or completely uncommited:";
+			undo = "git reset --soft HEAD^";
 		}
 
 		/git revert/ {
-			info = 'This made a new commit to retract a commit. You can undo *the revert commit* using a more extreme approach:';
-			undo = "git reset --soft 'HEAD^'";
+			info = "This made a new commit to retract a commit. You can undo *the revert commit* using a more extreme approach:";
+			undo = "git reset --soft HEAD^";
 		}
 
 		/git fetch/ {
-			info = 'This updated the local copy of all branches in this repo. Un-updating master (and you can do other branches, too).';
-			undo = 'git update-ref refs/remotes/origin/master refs/remotes/origin/master@{1}';
+			info = "This updated the local copy of all branches in this repo. Un-updating master (and you can do other branches, too).";
+			undo = "git update-ref refs/remotes/origin/master refs/remotes/origin/master@{1}";
 			autorun = true;
 		}
 
 		/git pull/ || /git merge/ {
-			info = 'This merged another branch (local or remote) into your current branch. This resets you to the last version.';
-			undo = 'git reset --hard HEAD^';
+			info = "This merged another branch (local or remote) into your current branch. This resets you to the last version.";
+			undo = "git reset --hard HEAD^";
 			autorun = true;
 		}
 
 		/git push/ {
 			autorun = false;
-			info = 'This uploaded all of your committed changes to a remote repo. It may be difficult to reverse it.';
-			info += '\nYou can use git revert <commit_id> to tell repos to turn back these commits.';
-			info += '\nThere is git checkout <commit_id> and git push --force, but this will mess up others\' git history!';
-			if(cmd.indexOf('git push heroku') > -1){
-				info += '\nIf you are hosting this app on Heroku, run "heroku rollback" to reset your app now.'; 
+			info = "This uploaded all of your committed changes to a remote repo. It may be difficult to reverse it.";
+			info += "\nYou can use git revert <commit_id> to tell repos to turn back these commits.";
+			info += "\nThere is git checkout <commit_id> and git push --force, but this will mess up others' git history!";
+			if(/git push heroku/){
+				info += "\nIf you are hosting this app on Heroku, run 'heroku rollback' to reset your app now."; 
 			}
 		}
 
@@ -221,15 +221,15 @@ var undoCommand = function(cmd, callback){
 			autorun = true;
 			if(/ -D/){
 				# delete branch
-				info = 'You deleted a branch. You can use "git branch" to create it again, or "git pull" to restore it from a remote repo.';
+				info = "You deleted a branch. You can use 'git branch' to create it again, or 'git pull' to restore it from a remote repo.";
 				autorun = false;
 			}
 			/git branch / {
 				# create branch
-				var branch_name = cmd.split('git branch ')[1].split(' ')[0];
-				if(branch_name.length && branch_name[0] != '-'){
-					info = 'You created a new branch named ' + branch_name + '. You can delete it:';
-					undo = 'git branch -D ' + branch_name;
+				var branch_name = cmd.split("git branch ")[1].split(" ")[0];
+				if(branch_name.length && branch_name[0] != "-"){
+					info = "You created a new branch named " + branch_name + ". You can delete it:";
+					undo = "git branch -D " + branch_name;
 				}
 			}
 			if(!info){
@@ -244,18 +244,18 @@ var undoCommand = function(cmd, callback){
 				autorun = true;
 			}
 			/stash pop/ || /stash apply/ {
-				info = 'You restored changes from the stash. You can stash specific changes again using git stash.';
+				info = "You restored changes from the stash. You can stash specific changes again using git stash.";
 				autorun = false;
 			}
 			else{
-				info = 'You stashed any changes which were not yet commited. Restore the latest stash using:';
-				undo = 'git stash apply';
+				info = "You stashed any changes which were not yet commited. Restore the latest stash using:";
+				undo = "git stash apply";
 				autorun = true;
 			}
 		}
 
 		/git archive/ {
-			info = 'This created an archive of part of the repo - you can delete it using "rm -rf <archive_file_or_folder>".';
+			info = "This created an archive of part of the repo - you can delete it using 'rm -rf <archive_file_or_folder>'.";
 			autorun = false;
 		}
 
