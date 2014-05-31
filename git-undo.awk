@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#!/bin/awk -f
 
 # requirements
 var program = require("commander");
