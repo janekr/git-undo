@@ -9,6 +9,22 @@ program
 # get last command
 var foundGit = 0;
 
+process.stdin.on("end", function() {
+	if(!foundGit){
+		console.log("I didn't find a git command");
+	}
+});
+
+function getFileNames(cmd) {
+	var parts = cmd.split(" ");
+	for(var p = 0; p < parts.length; p++){
+		if(parts[p].indexOf("-") === 0){
+			parts[p] = "";
+		}
+	}
+	return parts;
+}
+
 /git / {
 	undoCommand($0, function(err, info, command, autorun){
 		if(info){
@@ -38,22 +54,6 @@ var foundGit = 0;
 	});
 	foundGit = 1;
 	break;
-}
-
-process.stdin.on("end", function() {
-	if(!foundGit){
-		console.log("I didn't find a git command");
-	}
-});
-
-function getFileNames(cmd) {
-	var parts = cmd.split(" ");
-	for(var p = 0; p < parts.length; p++){
-		if(parts[p].indexOf("-") === 0){
-			parts[p] = "";
-		}
-	}
-	return parts;
 }
 
 function undoCommand(cmd, callback) {
