@@ -37,14 +37,14 @@ function getFileNames(cmd) {
 		return
 	}
 	if (command) {
-		if ((program.rawArgs.indexOf("-f") > -1 || program.rawArgs.indexOf("--fix") > -1) && autorun) {
-			print "Running " command
-			exec(command, function(){
-				print "Completed"
-			})
-		} else {
+#		if ((program.rawArgs.indexOf("-f") > -1 || program.rawArgs.indexOf("--fix") > -1) && autorun) {
+#			print "Running " command
+#			exec(command, function(){
+#				print "Completed"
+#			})
+#		} else {
 			print command
-		}
+#		}
 	} else if (autorun) {
 		print "No undo command necessary"
 	} else {
