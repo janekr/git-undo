@@ -12,7 +12,7 @@ BEGIN {
 }
 
 
-function getFileNames(cmd) {
+function remove_options(cmd) {
 	nfiles = split(cmd, parts, / /)
 	for (i=1; i<=nfiles; i++) {
 		if (!match(parts[i], /^-/)) {
@@ -84,7 +84,7 @@ function undoCommand() {
 		}
 	}
 	if (/git add/) {
-		var filenames = getFileNames(substr($0, 9)) # remove "git add " prefix
+		var filenames = remove_options(substr($0, 9)) # remove "git add " prefix
 		info = "This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system."
 		if(filenames.indexOf(".") > -1 || filenames.indexOf("*") > -1){
 			info += "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add."
