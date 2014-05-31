@@ -1,19 +1,16 @@
 #!/bin/awk -f
 
+BEGIN {
+	info = ""
+	undo = ""
+	autorun = 0
+	foundGit = 0
+
 # command line options
-program
-	.version("0.0.11")
-	.option("-f", "--fix", "attempt to fix")
-	.parse(process.argv);
+#	.version("0.0.11")
+#	.option("-f", "--fix", "attempt to fix")
+}
 
-# get last command
-var foundGit = 0;
-
-process.stdin.on("end", function() {
-	if(!foundGit){
-		console.log("I didn't find a git command");
-	}
-});
 
 function getFileNames(cmd) {
 	var parts = cmd.split(" ");
@@ -63,9 +60,6 @@ function getFileNames(cmd) {
 }
 
 function undoCommand(cmd, callback) {
-	var info = null;
-	var undo = null;
-	var autorun = 0;
 
 	/git init/ {
 		info = "This created a .git folder in the current directory. You can remove it.";
@@ -285,3 +279,10 @@ function undoCommand(cmd, callback) {
 
 	callback(null, info, undo, autorun);
 }
+
+END {
+	if (!foundGit) {
+		print "I didn't find a git command"
+	}
+}
+
