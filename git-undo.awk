@@ -106,11 +106,9 @@ function undoCommand() {
 		autorun = 1
 	}
 	if (/git mv/) {
-		filenames = remove_options(substr($0, 8)) # remove "git mv " prefix
-		var old_name = cmd.split("git mv ")[1].split(" ")[0]
-		var new_name = cmd.split("git mv ")[1].split(" ")[1]
-		info = "This moved the file (named " + old_name + ") to " + new_name + ". It can be moved back."
-		undo = "git mv " + new_name + " " + old_name
+		split(remove_options(substr($0, 8)), mvnames, / /) # remove "git mv " prefix
+		info = "This moved the file (named " + mvnames[1] + ") to " + mvnames[2] + ". It can be moved back."
+		undo = "git mv " + mvnames[2] + " " + mvnames[1]
 		autorun = 1
 	}
 	if (/git checkout/) {
