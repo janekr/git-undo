@@ -1,429 +1,78 @@
-var exec = require('child_process').exec;
-var assert = require('chai').assert;
+#!/bin/sh
 
-describe('git init', function(){
-  it('should remove the .git directory', function(done){
-    exec('echo "git init\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'rm -rf .git');
-      done();
-    });
-  });
-});
+verify_op() {
+	what=$1
+	expect=$2
+	desc=$3
 
-describe('git clone', function(){
-  it('should remove the default download directory', function(done){
-    exec('echo "git clone git@github.com:mapmeld/gitjk.git\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'rm -rf ./gitjk');
-      done();
-    });
-  });
+	echo "$desc"
+	res=$(echo $what | ../git-undo.awk)
+	if echo "$res" | grep -qs -- "$expect" ; then
+		echo "OK"
+	else
+		echo "FAIL"
+	fi
+}
 
-  it('should remove a custom download directory', function(done){
-    exec('echo "git clone git@github.com:mapmeld/gitjk.git test_gitjk\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'rm -rf ./test_gitjk');
-      done();
-    });
-  });
-});
+verify_op "git init" "rm -rf .git" "should remove the .git directory"
 
-describe('git add', function(){
-  it('should reset a previously-indexed file', function(done){
-    exec('echo "git add package.json\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git reset package.json');
-      done();
-    });
-  });
-  
-  it('should warn instead of doing git reset . or git reset *', function(done){
-    exec('echo "git add .\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'Using . or * affects all files');
-      done();
-    });
-  });
-});
+verify_op "git clone" "rm -rf ./gitjk" "should remove the default download directory"
+verify_op "git clone" "rm -rf ./verify_op_gitjk" "should remove a custom download directory"
 
-describe('git rm', function(){
-  it('should re-index a cached/removed file', function(done){
-    exec('echo "git rm package.json --cached\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git add package.json');
-      done();
-    });
-  });
-  
-  it('should un-delete a deleted file', function(done){
-    exec('echo "git rm package.json\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git checkout HEAD package.json');
-      done();
-    });
-  });
-});
+verify_op "git add" "git reset package.json" "should reset a previously-indexed file"
+verify_op "git add" "Using . or * affects all files" "should warn instead of doing git reset . or git reset *"
 
-describe('git mv', function(){
-  it('should move the file back', function(done){
-    exec('echo "git mv package.json p.json\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git mv p.json package.json');
-      done();
-    });
-  });
-});
+verify_op "git rm" "git add package.json" "should re-index a cached/removed file"
+verify_op "git rm" "git checkout HEAD package.json" "should un-delete a deleted file"
 
-describe('git checkout', function(){
-  it('should checkout back to the previous directory', function(done){
-    exec('echo "git checkout bogus\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git checkout -');
-      done();
-    });
-  });
-  
-  it('should checkout back to the previous directory', function(done){
-    exec('echo "git checkout -b created\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git checkout -');
-      done();
-    });
-  });
-});
+verify_op "git mv" "git mv p.json package.json" "should move the file back"
 
-describe('git remote', function(){
-  it('should remove a remote add', function(done){
-    exec('echo "git remote add github https://github.com\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git remote rm github');
-      done();
-    });
-  });
-  
-  it('should warn a remote remove', function(done){
-    exec('echo "git remote remove github\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git remote add github');
-      done();
-    });
-  });
-  
-  it('should warn a remote rm', function(done){
-    exec('echo "git remote rm github\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git remote add github');
-      done();
-    });
-  });
-  
-  it('should swap names in a remote rename', function(done){
-    exec('echo "git remote rename github banana\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, 'git remote rename banana github');
-      done();
-    });
-  });
-  
-  it('does nothing without args', function(done){
-    exec('echo "git remote\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-});
+verify_op "git checkout" "git checkout -" "should checkout back to the previous directory"
+verify_op "git checkout" "git checkout -" "should checkout back to the previous directory"
 
-describe('git commit', function(){
-  it('should unseal a commit', function(done){
-    exec('echo "git commit\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git reset --soft 'HEAD^'");
-      done();
-    });
-  });
-});
+verify_op "git remote" "git remote rm github" "should remove a remote add"
+verify_op "git remote" "git remote add github" "should warn a remote remove"
+verify_op "git remote" "git remote add github" "should warn a remote rm"
+verify_op "git remote" "git remote rename banana github" "should swap names in a remote rename"
+verify_op "git remote" "doesn't change the repo" "does nothing without args"
 
-describe('git revert', function(){
-  it('should unseal the git revert commit', function(done){
-    exec('echo "git revert 0ee030\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git reset --soft 'HEAD^'");
-      done();
-    });
-  });
-});
+verify_op "git commit" "git reset --soft 'HEAD^'" "should unseal a commit"
 
-describe('git fetch', function(){
-  it('should un-update master branch', function(done){
-    exec('echo "git fetch\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git update-ref refs/remotes/origin/master refs/remotes/origin/master@{1}");
-      done();
-    });
-  });
-});
+verify_op "git revert" "git reset --soft 'HEAD^'" "should unseal the git revert commit"
 
-describe('git pull', function(){
-  it('should do a reset after git pull', function(done){
-    exec('echo "git pull origin master\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git reset --hard HEAD^");
-      done();
-    });
-  });
-});
+verify_op "git fetch" "git update-ref refs/remotes/origin/master refs/remotes/origin/master@{1}" "should un-update master branch"
 
-describe('git merge', function(){
-  it('should do a reset after git merge', function(done){
-    exec('echo "git merge merged\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git reset --hard HEAD^");
-      done();
-    });
-  });
-});
+verify_op "git pull" "git reset --hard HEAD^" "should do a reset after git pull"
 
-describe('git archive', function(){
-  it('should tell user to remove archive', function(done){
-    exec('echo "git archive HEAD > sample.zip\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "rm -rf");
-      done();
-    });
-  });
-});
+verify_op "git merge" "git reset --hard HEAD^" "should do a reset after git merge"
 
-describe('git stash', function(){
-  it('should tell user when they stashed changes', function(done){
-    exec('echo "git stash\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git stash apply");
-      done();
-    });
-  });
+verify_op "git archive" "rm -rf" "should tell user to remove archive"
 
-  it('should tell user when they un-stashed changes', function(done){
-    exec('echo "git stash apply\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git stash");
-      done();
-    });
-  });
+verify_op "git stash" "git stash apply" "should tell user when they stashed changes"
 
-  it('should tell user when they un-stashed changes', function(done){
-    exec('echo "git stash pop\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git stash");
-      done();
-    });
-  });
+verify_op "git stash" "git stash" "should tell user when they un-stashed changes"
 
-  it('should tell user when they listed stashes', function(done){
-    exec('echo "git stash list\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-});
+verify_op "git stash" "git stash" "should tell user when they un-stashed changes"
 
-describe('git branch', function(){
-  it('should tell user when they added a branch', function(done){
-    exec('echo "git branch banana\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git branch -D banana");
-      done();
-    });
-  });
+verify_op "git stash" "doesn't change the repo" "should tell user when they listed stashes"
+verify_op "git branch" "git branch -D banana" "should tell user when they added a branch"
+verify_op "git branch" "git branch" "should tell user when they deleted a branch"
+verify_op "git branch" "doesn't change the repo" "should tell user when they listed branches"
 
-  it('should tell user when they deleted a branch', function(done){
-    exec('echo "git branch -D banana\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "git branch");
-      assert.include(response, "git pull");
-      done();
-    });
-  });
+verify_op "git push" "This uploaded all of your committed changes to a remote repo." "should not fix a git push"
+verify_op "git push" "heroku rollback" "should help fix a push to heroku"
 
-  it('should tell user when they listed branches', function(done){
-    exec('echo "git branch -a\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-});
+# reassure user on do-nothing commands
 
-describe('git push', function(){
-  it('should not fix a git push', function(done){
-    exec('echo "git push origin master\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "This uploaded all of your committed changes to a remote repo.");
-      done();
-    });
-  });
-  
-  it('should help fix a push to heroku', function(done){
-    exec('echo "git push heroku master\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "heroku rollback");
-      done();
-    });
-  });
-});
+verify_op "git status" "doesn't change the repo" "git status"
+verify_op "git cat-file" "doesn't change the repo" "git cat-file"
+verify_op "git diff" "doesn't change the repo" "git diff"
+verify_op "git show" "doesn't change the repo" "git show"
+verify_op "git log" "doesn't change the repo" "git log"
+verify_op "git ls-tree" "doesn't change the repo" "git ls-tree"
+verify_op "git grep" "doesn't change the repo" "git grep"
 
-describe('reassure user on do-nothing commands', function(){
-  it('git status', function(done){
-    exec('echo "git status\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
+# unknown command
 
-  it('git cat-file', function(done){
-    exec('echo "git cat-file 0ee030\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-
-  it('git diff', function(done){
-    exec('echo "git diff\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-  
-  it('git show', function(done){
-    exec('echo "git show\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-  
-  it('git log', function(done){
-    exec('echo "git log\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-
-  it('git ls-tree', function(done){
-    exec('echo "git ls-tree 0ee030\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-
-  it('git grep', function(done){
-    exec('echo "git grep\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "doesn't change the repo");
-      done();
-    });
-  });
-});
-
-describe('unknown command', function(){
-  it('should print an error message with unknown command', function(done){
-    exec('echo "git blog\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "I didn't recognize that command");
-      done();
-    });
-  });
-  
-  it('should print an error message without git', function(done){
-    exec('echo "ls\n" | ./index.js', function(err, response){
-      if(err){
-        throw err;
-      }
-      assert.include(response, "I didn't find a git command");
-      done();
-    });
-  });
-});
+verify_op "git blog" "I didn't recognize that command" "should print an error message with unknown command"
+verify_op "ls" "I didn't find a git command" "should print an error message without git"
