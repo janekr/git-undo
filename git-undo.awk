@@ -7,17 +7,6 @@ BEGIN {
 	foundGit = 0
 }
 
-function remove_options(s, c) {
-	cmd = substr(s, length(c)+1)
-	nfiles = split(cmd, parts, / /)
-	for (i=1; i<=nfiles; i++) {
-		if (!match(parts[i], /^-/)) {
-			files = files " " parts[i]
-		}
-	}
-	return substr(files, 2)
-}
-
 {
 	gsub(/[ \t]+/, " ", $0)
 	gsub(/\r?\n|\r/, " ", $0)
@@ -43,6 +32,23 @@ function remove_options(s, c) {
 	} else {
 		print "I didn't recognize that command"
 	}
+}
+
+END {
+	if (!foundGit) {
+		print "I didn't find a git command"
+	}
+}
+
+function remove_options(s, c) {
+	cmd = substr(s, length(c)+1)
+	nfiles = split(cmd, parts, / /)
+	for (i=1; i<=nfiles; i++) {
+		if (!match(parts[i], /^-/)) {
+			files = files " " parts[i]
+		}
+	}
+	return substr(files, 2)
 }
 
 function undoCommand() {
@@ -209,10 +215,3 @@ function undoCommand() {
 		autorun = 1
 	}
 }
-
-END {
-	if (!foundGit) {
-		print "I didn't find a git command"
-	}
-}
-
