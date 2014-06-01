@@ -23,6 +23,10 @@ function remove_options(cmd) {
 	return substr(files, 1)
 }
 
+function strip_prefix(s, p) {
+	substr(s, 1, length(p))
+}
+
 {
 	gsub(/[ \t]+/, " ", $0)
 	gsub(/\r?\n|\r/, " ", $0)
