@@ -70,7 +70,7 @@ function undoCommand() {
 			sub(/\.git$/, "", outputfolder)
 		}
 		info = "This downloaded a repo and all of its git history to a folder. You can remove it."
-		if (outputfolder && length(outputfolder) && !match(outputfolder, /\.\./)) {
+		if (outputfolder && !match(outputfolder, /\.\./)) {
 			gsub(/ /, "\\ ", outputfolder)
 			undo = "rm -rf ./" outputfolder
 			autorun = 1
@@ -81,7 +81,7 @@ function undoCommand() {
 	} else if (/git add/) {
 		filenames = remove_options($0, "git add ")
 		info = "This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system."
-		if (match(filenames, /[ ^]\.[$ ]/) || match(filenames, /\*/)) {
+		if (match(filenames, /( |^)\.($| )/) || match(filenames, /\*/)) {
 			info = info "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add."
 			autorun = 0
 		} else {
