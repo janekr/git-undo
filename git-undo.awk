@@ -57,8 +57,7 @@ function undoCommand() {
 		info = "This created a .git folder in the current directory. You can remove it."
 		undo = "rm -rf .git"
 		autorun = 1
-	}
-	if (/git clone/) {
+	} else if (/git clone/) {
 		cloned = split(remove_options($0, "git clone "), cloned_into, / /)
 		if (cloned > 1) {
 			# specified output folder
@@ -79,8 +78,7 @@ function undoCommand() {
 			info = info "\nCouldn't figure out what folder this was downloaded to."
 			autorun = 0
 		}
-	}
-	if (/git add/) {
+	} else if (/git add/) {
 		filenames = remove_options($0, "git add ")
 		info = "This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system."
 		if (match(filenames, /[ ^]\.[$ ]/) || match(filenames, /\*/)) {
@@ -90,8 +88,7 @@ function undoCommand() {
 			undo = "git reset " filenames
 			autorun = 1
 		}
-	}
-	if (/git rm/) {
+	} else if (/git rm/) {
 		filenames = remove_options($0, "git rm ")
 		if (/--cached/) {
 			info = "This took files out of the changes staged for commit. All changes will be re-added to staging for this commit."
@@ -101,66 +98,55 @@ function undoCommand() {
 			undo = "git checkout HEAD " filenames
 		}
 		autorun = 1
-	}
-	if (/git mv/) {
+	} else if (/git mv/) {
 		split(remove_options($0, "git mv "), mvnames, / /)
 		info = "This moved the file (named " mvnames[1] ") to " mvnames[2] ". It can be moved back."
 		undo = "git mv " mvnames[2] " " mvnames[1]
 		autorun = 1
-	}
-	if (/git checkout/) {
+	} else if (/git checkout/) {
 		info = "git checkout moved you into a different branch of the repo. You can checkout any branch by name, or checkout the last one using -"
 		undo = "git checkout -"
 		autorun = 1
-	}
-	if (/git remote add/) {
+	} else if (/git remote add/) {
 		split(remove_options($0, "git remote add "), repoinfo, / /)
 
 		info = "This added a remote repo (named " repoinfo[1] ") pointing to " repoinfo[2]
 		info = info "\nIt can be removed."
 		undo = "git remote rm " repoinfo[1]
 		autorun = 1
-	}
-	if (/git remote remove/ || /git remote rm/) {
+	} else if (/git remote remove/ || /git remote rm/) {
 		split(remove_options($0, "git remote "), repo_name, / /)
 
 		info = "This removed a remote repo (named " repo_name[2] ")"
 		info = info "\nIt needs to be added back using git remote add " repo_name[2] " <git-url>"
 		autorun = 0
-	}
-	if (/git remote set-url/) {
+	} else if (/git remote set-url/) {
 		split(remove_options($0, "git remote set-url "), repoinfo, / /)
 
 		info = "This changed the remote repo (named " repoinfo[1] ") to point to " repoinfo[2]
 		info = info "\nIt can be removed (using git remote rm) or set again (using git remote set-url)."
 		autorun = 0
-	}
-	if (/git remote rename/) {
+	} else if (/git remote rename/) {
 		split(remove_options($0, "git remote rename "), repoinfo, / /)
 
 		info = "This changed the remote repo (named " repoinfo[1] ") to have the name " repoinfo[2] ". It can be reset."
 		undo = "git remote rename " repoinfo[2] " " repoinfo[1]
 		autorun = 1
-	}
-	if (/git commit/) {
+	} else if (/git commit/) {
 		info = "This saved your staged changes as a commit, which can be updated with git commit --amend or completely uncommited:"
 		undo = "git reset --soft HEAD^"
-	}
-	if (/git revert/) {
+	} else if (/git revert/) {
 		info = "This made a new commit to retract a commit. You can undo *the revert commit* using a more extreme approach:"
 		undo = "git reset --soft HEAD^"
-	}
-	if (/git fetch/) {
+	} else if (/git fetch/) {
 		info = "This updated the local copy of all branches in this repo. Un-updating master (and you can do other branches, too)."
 		undo = "git update-ref refs/remotes/origin/master refs/remotes/origin/master@{1}"
 		autorun = 1
-	}
-	if (/git pull/ || /git merge/) {
+	} else if (/git pull/ || /git merge/) {
 		info = "This merged another branch (local or remote) into your current branch. This resets you to the last version."
 		undo = "git reset --hard HEAD^"
 		autorun = 1
-	}
-	if (/git push/) {
+	} else if (/git push/) {
 		autorun = 0
 		info = "This uploaded all of your committed changes to a remote repo. It may be difficult to reverse it."
 		info = info "\nYou can use git revert <commit_id> to tell repos to turn back these commits."
@@ -168,8 +154,7 @@ function undoCommand() {
 		if (/git push heroku/) {
 			info = info "\nIf you are hosting this app on Heroku, run 'heroku rollback' to reset your app now."; 
 		}
-	}
-	if (/git branch/) {
+	} else if (/git branch/) {
 		autorun = 1
 		if (/ -D/) {
 			# delete branch
@@ -189,8 +174,7 @@ function undoCommand() {
 			# must have listed branches
 			info = "git branch on its own doesn't change the repo; it just lists all branches. Use it often!"
 		}
-	}
-	if (/git stash/) {
+	} else if (/git stash/) {
 		if (/stash list/) {
 			info = "git stash list doesn't change the repo; it just tells you the stashed changes which you can restore using git stash apply."
 			autorun = 1
@@ -202,41 +186,32 @@ function undoCommand() {
 			undo = "git stash apply"
 			autorun = 1
 		}
-	}
-	if (/git archive/) {
+	} else if (/git archive/) {
 		info = "This created an archive of part of the repo - you can delete it using 'rm -rf <archive_file_or_folder>'."
 		autorun = 0
-	}
-	# harmless
+	} else # harmless
 	if (/git cat-file/) {
 		info = "git cat-file doesn't change the repo; it just tells you the type of an object in the repo."
 		autorun = 1
-	}
-	if (/git diff/) {
+	} else if (/git diff/) {
 		info = "git diff doesn't change the repo; it just tells you the changes waiting for commit OR the changes between branches. Use it often!"
 		autorun = 1
-	}
-	if (/git grep/) {
+	} else if (/git grep/) {
 		info = "git grep doesn't change the repo; it's a search tool. Use grep and git grep often!"
 		autorun = 1
-	}
-	if (/git ls-tree/) {
+	} else if (/git ls-tree/) {
 		info = "git ls-tree doesn't change the repo; it just tells you about an object in the git repo."
 		autorun = 1
-	}
-	if (/git show/) {
+	} else if (/git show/) {
 		info = "git show doesn't change the repo; it just tells you the changes waiting for commit OR the changes between branches."
 		autorun = 1
-	}
-	if (/git log/) {
+	} else if (/git log/) {
 		info = "git log doesn't change the repo; it just lists the last several commits in this branch. Use it often!"
 		autorun = 1
-	}
-	if (/git status/) {
+	} else if (/git status/) {
 		info = "git status doesn't change the repo; it just tells you what changes there are. Use it often!"
 		autorun = 1
-	}
-	if (/git remote/) {
+	} else if (/git remote/) {
 		info = "git remote (without additional arguments) doesn't change the repo; it just tells you what remotes there are. Use it often!"
 		autorun = 1
 	}
