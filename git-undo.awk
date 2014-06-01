@@ -33,14 +33,14 @@ function remove_options(cmd) {
 	undoCommand()
 	if (info) {
 		print info
-		if (command) {
+		if (undo) {
 	#		if ((program.rawArgs.indexOf("-f") > -1 || program.rawArgs.indexOf("--fix") > -1) && autorun) {
 	#			print "Running " command
 	#			exec(command, function(){
 	#				print "Completed"
 	#			})
 	#		} else {
-				print command
+				print undo
 	#		}
 		} else if (autorun) {
 			print "No undo command necessary"
@@ -179,10 +179,11 @@ function undoCommand() {
 		}
 		if (/git branch /) {
 			# create branch
-			var branch_name = cmd.split("git branch ")[1].split(" ")[0]
-			if(branch_name.length && branch_name[0] != "-"){
-				info = "You created a new branch named " + branch_name + ". You can delete it:"
-				undo = "git branch -D " + branch_name
+			branchn = split(remove_options(substr($0, 12)), branch, / /) # remove "git branch " prefix
+
+			if(branchn && branch[1] != "-"){
+				info = "You created a new branch named " + branch[1] + ". You can delete it:"
+				undo = "git branch -D " + branch[1]
 			}
 		}
 		if (!info) {
