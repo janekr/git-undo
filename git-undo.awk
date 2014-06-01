@@ -5,12 +5,7 @@ BEGIN {
 	undo = ""
 	autorun = 0
 	foundGit = 0
-
-# command line options
-#	.version("0.0.11")
-#	.option("-f", "--fix", "attempt to fix")
 }
-
 
 function remove_options(s, c) {
 	cmd = substr(s, length(c)+1)
@@ -22,6 +17,7 @@ function remove_options(s, c) {
 	}
 	return substr(files, 2)
 }
+
 {
 	gsub(/[ \t]+/, " ", $0)
 	gsub(/\r?\n|\r/, " ", $0)
@@ -33,14 +29,11 @@ function remove_options(s, c) {
 	if (info) {
 		print info
 		if (undo) {
-	#		if ((program.rawArgs.indexOf("-f") > -1 || program.rawArgs.indexOf("--fix") > -1) && autorun) {
-	#			print "Running " command
-	#			exec(command, function(){
-	#				print "Completed"
-	#			})
-	#		} else {
+			if (ENVIRON["RUN_FIX"] && autorun) {
+				print "Running " undo
+			} else {
 				print undo
-	#		}
+			}
 		} else if (autorun) {
 			print "No undo command necessary"
 		} else {

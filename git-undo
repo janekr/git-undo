@@ -1,0 +1,46 @@
+#!/bin/sh
+
+VERSION="0.1.0"
+PROGRAM=${0##*/}
+dir=$(d=$0; [ -L "$d" ] && d=$(readlink -f "$d"); dirname "$d")
+undo=$dir/git-undo.awk
+usage="Usage: $PROGRAM [options]
+
+-f|--fix		attempt to fix
+"
+
+if [ ! -x /usr/bin/getopt ]; then
+	echo >&2 "You need to install util-linux to use git-undo"
+	exit 1
+fi
+
+t=$(getopt -o hfV --long help,version,fix -n "$PROGRAM" -- "$@") || exit $?
+eval set -- "$t"
+
+while :; do
+	case "$1" in
+	-h|--help)
+		echo 2>&1 "$usage"
+		exit 1
+	;;
+	-f|--fix)
+		export RUN_FIX=1
+	;;
+	-V|--version)
+		echo "$VERSION"
+		exit 0
+		;;
+	--)
+		shift
+		break
+	;;
+	*)
+		echo >&2 "$PROGRAM: Internal error: \`$1' not recognized!"
+		exit 1
+		;;
+	esac
+	shift
+done
+
+awk=awk
+LC_ALL=en_US.UTF-8 $awk -f $undo || exit $?
