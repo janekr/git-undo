@@ -13,15 +13,14 @@ BEGIN {
 
 
 function remove_options(s, c) {
-	cmd = substr(s, 1, length(c))
+	cmd = substr(s, length(c)+1)
 	nfiles = split(cmd, parts, / /)
 	for (i=1; i<=nfiles; i++) {
 		if (!match(parts[i], /^-/)) {
-			files += " "
-			files += parts[i]
+			files = files " " parts[i]
 		}
 	}
-	return substr(files, 1)
+	return substr(files, 2)
 }
 {
 	gsub(/[ \t]+/, " ", $0)
@@ -77,7 +76,7 @@ function undoCommand() {
 			undo = "rm -rf ./" outputfolder
 			autorun = 1
 		} else {
-			info += "\nCouldn't figure out what folder this was downloaded to."
+			info = info "\nCouldn't figure out what folder this was downloaded to."
 			autorun = 0
 		}
 	}
@@ -85,7 +84,7 @@ function undoCommand() {
 		filenames = remove_options($0, "git add ")
 		info = "This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system."
 		if (match(filenames, /[ ^]\.[$ ]/) || match(filenames, /\*/)) {
-			info += "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add."
+			info = info "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add."
 			autorun = 0
 		} else {
 			undo = "git reset " filenames
@@ -105,8 +104,8 @@ function undoCommand() {
 	}
 	if (/git mv/) {
 		split(remove_options($0, "git mv "), mvnames, / /)
-		info = "This moved the file (named " + mvnames[1] + ") to " + mvnames[2] + ". It can be moved back."
-		undo = "git mv " + mvnames[2] + " " + mvnames[1]
+		info = "This moved the file (named " mvnames[1] ") to " mvnames[2] ". It can be moved back."
+		undo = "git mv " mvnames[2] " " mvnames[1]
 		autorun = 1
 	}
 	if (/git checkout/) {
@@ -117,30 +116,30 @@ function undoCommand() {
 	if (/git remote add/) {
 		split(remove_options($0, "git remote add "), repoinfo, / /)
 
-		info = "This added a remote repo (named " + repoinfo[1] + ") pointing to " + repoinfo[2]
-		info += "\nIt can be removed."
-		undo = "git remote rm " + repoinfo[1]
+		info = "This added a remote repo (named " repoinfo[1] ") pointing to " repoinfo[2]
+		info = info "\nIt can be removed."
+		undo = "git remote rm " repoinfo[1]
 		autorun = 1
 	}
 	if (/git remote remove/ || /git remote rm/) {
 		split(remove_options($0, "git remote "), repo_name, / /)
 
-		info = "This removed a remote repo (named " + repo_name[2] + ")"
-		info += "\nIt needs to be added back using git remote add " + repo_name[2] + " <git-url>"
+		info = "This removed a remote repo (named " repo_name[2] ")"
+		info = info "\nIt needs to be added back using git remote add " repo_name[2] " <git-url>"
 		autorun = 0
 	}
 	if (/git remote set-url/) {
 		split(remove_options($0, "git remote set-url "), repoinfo, / /)
 
-		info = "This changed the remote repo (named " + repoinfo[1] + ") to point to " + repoinfo[2]
-		info += "\nIt can be removed (using git remote rm) or set again (using git remote set-url)."
+		info = "This changed the remote repo (named " repoinfo[1] ") to point to " repoinfo[2]
+		info = info "\nIt can be removed (using git remote rm) or set again (using git remote set-url)."
 		autorun = 0
 	}
 	if (/git remote rename/) {
 		split(remove_options($0, "git remote rename "), repoinfo, / /)
 
-		info = "This changed the remote repo (named " + repoinfo[1] + ") to have the name " + repoinfo[2] + ". It can be reset."
-		undo = "git remote rename " + repoinfo[2] + " " + repoinfo[1]
+		info = "This changed the remote repo (named " repoinfo[1] ") to have the name " repoinfo[2] ". It can be reset."
+		undo = "git remote rename " repoinfo[2] " " repoinfo[1]
 		autorun = 1
 	}
 	if (/git commit/) {
@@ -164,10 +163,10 @@ function undoCommand() {
 	if (/git push/) {
 		autorun = 0
 		info = "This uploaded all of your committed changes to a remote repo. It may be difficult to reverse it."
-		info += "\nYou can use git revert <commit_id> to tell repos to turn back these commits."
-		info += "\nThere is git checkout <commit_id> and git push --force, but this will mess up others' git history!"
+		info = info "\nYou can use git revert <commit_id> to tell repos to turn back these commits."
+		info = info "\nThere is git checkout <commit_id> and git push --force, but this will mess up others' git history!"
 		if (/git push heroku/) {
-			info += "\nIf you are hosting this app on Heroku, run 'heroku rollback' to reset your app now."; 
+			info = info "\nIf you are hosting this app on Heroku, run 'heroku rollback' to reset your app now."; 
 		}
 	}
 	if (/git branch/) {
@@ -182,8 +181,8 @@ function undoCommand() {
 			branchn = split(remove_options($0, "git branch "), branch, / /)
 
 			if(branchn && branch[1] != "-"){
-				info = "You created a new branch named " + branch[1] + ". You can delete it:"
-				undo = "git branch -D " + branch[1]
+				info = "You created a new branch named " branch[1] ". You can delete it:"
+				undo = "git branch -D " branch[1]
 			}
 		}
 		if (!info) {
