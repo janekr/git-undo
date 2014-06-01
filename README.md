@@ -1,7 +1,5 @@
 # git-undo
 
-## Preface
-
 This is an awk/shell conversion of nodejs based [gitjk](https://github.com/mapmeld/gitjk) by Nick Doiron.
 
 If you just ran a git command that you didn't mean to, this program will either undo it,
