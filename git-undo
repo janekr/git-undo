@@ -43,4 +43,8 @@ while :; do
 done
 
 awk=awk
-LC_ALL=en_US.UTF-8 $awk -f $undo || exit $?
+if [ $# -eq 0 ]; then
+	LC_ALL=en_US.UTF-8 $awk -f $undo || exit $?
+else
+	LC_ALL=en_US.UTF-8 echo "$@" | $awk -f $undo || exit $?
+fi
