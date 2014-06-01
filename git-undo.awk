@@ -115,34 +115,32 @@ function undoCommand() {
 		autorun = 1
 	}
 	if (/git remote add/) {
-		var repo_name = cmd.split("git remote add ")[1].split(" ")[0]
-		var repo_url = cmd.split("git remote add ")[1].split(" ")[1]
+		split(remove_options(substr($0, 16)), repoinfo, / /) # remove "git remote add " prefix
 
-		info = "This added a remote repo (named " + repo_name + ") pointing to " + repo_url
+		info = "This added a remote repo (named " + repoinfo[1] + ") pointing to " + repoinfo[2]
 		info += "\nIt can be removed."
-		undo = "git remote rm " + repo_name
+		undo = "git remote rm " + repoinfo[1]
 		autorun = 1
 	}
 	if (/git remote remove/ || /git remote rm/) {
-		var repo_name = cmd.split("git remote ")[1].split(" ")[1]
+		split(remove_options(substr($0, 12)), repo_name, / /) # remove "git remote " prefix
 
-		info = "This removed a remote repo (named " + repo_name + ")"
-		info += "\nIt needs to be added back using git remote add " + repo_name + " <git-url>"
+		info = "This removed a remote repo (named " + repo_name[2] + ")"
+		info += "\nIt needs to be added back using git remote add " + repo_name[2] + " <git-url>"
 		autorun = 0
 	}
 	if (/git remote set-url/) {
-		var repo_name = cmd.split("git remote set-url ")[1].split(" ")[0]
-		var repo_url = cmd.split("git remote set-url ")[1].split(" ")[1]
+		split(remove_options(substr($0, 20)), repoinfo, / /) # remove "git remote set-url " prefix
 
-		info = "This changed the remote repo (named " + repo_name + ") to point to " + repo_url
+		info = "This changed the remote repo (named " + repoinfo[1] + ") to point to " + repoinfo[2]
 		info += "\nIt can be removed (using git remote rm) or set again (using git remote set-url)."
 		autorun = 0
 	}
 	if (/git remote rename/) {
-		var old_name = cmd.split("git remote rename ")[1].split(" ")[0]
-		var new_name = cmd.split("git remote rename ")[1].split(" ")[1]
-		info = "This changed the remote repo (named " + old_name + ") to have the name " + new_name + ". It can be reset."
-		undo = "git remote rename " + new_name + " " + old_name
+		split(remove_options(substr($0, 19)), repoinfo, / /) # remove "git remote rename " prefix
+
+		info = "This changed the remote repo (named " + repoinfo[1] + ") to have the name " + repoinfo[2] + ". It can be reset."
+		undo = "git remote rename " + repoinfo[2] + " " + repoinfo[1]
 		autorun = 1
 	}
 	if (/git commit/) {
