@@ -11,6 +11,8 @@ verify_op() {
 		echo "OK"
 	else
 		echo "FAIL"
+		echo "Expected: $expect"
+		echo "Got: $res"
 	fi
 }
 
