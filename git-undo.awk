@@ -64,7 +64,7 @@ function undoCommand() {
 		autorun = 1
 	}
 	if (/git clone/) {
-		cloned = split(remove_options(substr($0, 11)), cloned_into, / /) # remove "git clone " prefix
+		cloned = split(remove_options(strip_prefix($0, "git clone ")), cloned_into, / /)
 		if (cloned > 1) {
 			# specified output folder
 			outputfolder = cloned_into[2]
@@ -86,7 +86,7 @@ function undoCommand() {
 		}
 	}
 	if (/git add/) {
-		filenames = remove_options(substr($0, 9)) # remove "git add " prefix
+		filenames = remove_options(strip_prefix($0, "git add "))
 		info = "This added files to the changes staged for commit. All changes to files will be removed from staging for this commit, but remain saved in the local file system."
 		if (match(filenames, /[ ^]\.[$ ]/) || match(filenames, /\*/)) {
 			info += "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add."
@@ -97,7 +97,7 @@ function undoCommand() {
 		}
 	}
 	if (/git rm/) {
-		filenames = remove_options(substr($0, 8)) # remove "git rm " prefix
+		filenames = remove_options(strip_prefix($0, "git rm "))
 		if (/--cached/) {
 			info = "This took files out of the changes staged for commit. All changes will be re-added to staging for this commit."
 			undo = "git add " filenames
@@ -108,7 +108,7 @@ function undoCommand() {
 		autorun = 1
 	}
 	if (/git mv/) {
-		split(remove_options(substr($0, 8)), mvnames, / /) # remove "git mv " prefix
+		split(remove_options(strip_prefix($0, "git mv ")), mvnames, / /)
 		info = "This moved the file (named " + mvnames[1] + ") to " + mvnames[2] + ". It can be moved back."
 		undo = "git mv " + mvnames[2] + " " + mvnames[1]
 		autorun = 1
@@ -119,7 +119,7 @@ function undoCommand() {
 		autorun = 1
 	}
 	if (/git remote add/) {
-		split(remove_options(substr($0, 16)), repoinfo, / /) # remove "git remote add " prefix
+		split(remove_options(strip_prefix($0, "git remote add ")), repoinfo, / /)
 
 		info = "This added a remote repo (named " + repoinfo[1] + ") pointing to " + repoinfo[2]
 		info += "\nIt can be removed."
@@ -127,21 +127,21 @@ function undoCommand() {
 		autorun = 1
 	}
 	if (/git remote remove/ || /git remote rm/) {
-		split(remove_options(substr($0, 12)), repo_name, / /) # remove "git remote " prefix
+		split(remove_options(strip_prefix($0, "git remote ")), repo_name, / /)
 
 		info = "This removed a remote repo (named " + repo_name[2] + ")"
 		info += "\nIt needs to be added back using git remote add " + repo_name[2] + " <git-url>"
 		autorun = 0
 	}
 	if (/git remote set-url/) {
-		split(remove_options(substr($0, 20)), repoinfo, / /) # remove "git remote set-url " prefix
+		split(remove_options(strip_prefix($0, "git remote set-url ")), repoinfo, / /)
 
 		info = "This changed the remote repo (named " + repoinfo[1] + ") to point to " + repoinfo[2]
 		info += "\nIt can be removed (using git remote rm) or set again (using git remote set-url)."
 		autorun = 0
 	}
 	if (/git remote rename/) {
-		split(remove_options(substr($0, 19)), repoinfo, / /) # remove "git remote rename " prefix
+		split(remove_options(strip_prefix($0, "git remote rename ")), repoinfo, / /)
 
 		info = "This changed the remote repo (named " + repoinfo[1] + ") to have the name " + repoinfo[2] + ". It can be reset."
 		undo = "git remote rename " + repoinfo[2] + " " + repoinfo[1]
@@ -183,7 +183,7 @@ function undoCommand() {
 		}
 		if (/git branch /) {
 			# create branch
-			branchn = split(remove_options(substr($0, 12)), branch, / /) # remove "git branch " prefix
+			branchn = split(remove_options(strip_prefix($0, "git branch ")), branch, / /)
 
 			if(branchn && branch[1] != "-"){
 				info = "You created a new branch named " + branch[1] + ". You can delete it:"
