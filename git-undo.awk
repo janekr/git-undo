@@ -87,19 +87,17 @@ function undoCommand() {
 		if (match(filenames, /[ ^]\.[$ ]/) || match(filenames, /\*/)) {
 			info += "\nUsing . or * affects all files, so you will need to run 'git reset <file>' on each file you didn't want to add."
 			autorun = 0
-		}
-		else{
+		} else {
 			undo = "git reset " filenames
 			autorun = 1
 		}
 	}
 	if (/git rm/) {
 		filenames = remove_options(substr($0, 8)) # remove "git rm " prefix
-		if(/--cached/){
+		if (/--cached/) {
 			info = "This took files out of the changes staged for commit. All changes will be re-added to staging for this commit."
 			undo = "git add " filenames
-		}
-		else{
+		} else {
 			info = "Don't panic, but this deleted files from the file system. They're not in the recycle bin; they're gone. These files can be restored from your last commit, but uncommited changes were lost."
 			undo = "git checkout HEAD " filenames
 		}
@@ -170,13 +168,13 @@ function undoCommand() {
 		info = "This uploaded all of your committed changes to a remote repo. It may be difficult to reverse it."
 		info += "\nYou can use git revert <commit_id> to tell repos to turn back these commits."
 		info += "\nThere is git checkout <commit_id> and git push --force, but this will mess up others' git history!"
-		if(/git push heroku/){
+		if (/git push heroku/) {
 			info += "\nIf you are hosting this app on Heroku, run 'heroku rollback' to reset your app now."; 
 		}
 	}
 	if (/git branch/) {
 		autorun = 1
-		if(/ -D/){
+		if (/ -D/) {
 			# delete branch
 			info = "You deleted a branch. You can use 'git branch' to create it again, or 'git pull' to restore it from a remote repo."
 			autorun = 0
@@ -189,21 +187,19 @@ function undoCommand() {
 				undo = "git branch -D " + branch_name
 			}
 		}
-		if(!info){
+		if (!info) {
 			# must have listed branches
 			info = "git branch on its own doesn't change the repo; it just lists all branches. Use it often!"
 		}
 	}
 	if (/git stash/) {
-		if(/stash list/){
+		if (/stash list/) {
 			info = "git stash list doesn't change the repo; it just tells you the stashed changes which you can restore using git stash apply."
 			autorun = 1
-		}
-		/stash pop/ || /stash apply/ {
+		} else if (/stash pop/ || /stash apply/) {
 			info = "You restored changes from the stash. You can stash specific changes again using git stash."
 			autorun = 0
-		}
-		else{
+		} else {
 			info = "You stashed any changes which were not yet commited. Restore the latest stash using:"
 			undo = "git stash apply"
 			autorun = 1
