@@ -1,4 +1,4 @@
-#!/bin/awk -f
+#!/usr/bin/gawk -f
 
 BEGIN {
 	info = ""
@@ -17,20 +17,21 @@ BEGIN {
 	undoCommand()
 	if (info) {
 		print info
+		print "INFO|" info "|" >"/dev/fd/3"
 		if (undo) {
-			if (ENVIRON["RUN_FIX"] && autorun) {
-				print "Running " undo
-			} else {
-				print undo
-			}
+			print undo
+			print "UNDO|" undo "|" >"/dev/fd/3"
 		} else if (autorun) {
 			print "No undo command necessary"
+			print "UNDO|1|" >"/dev/fd/3"
 		} else {
 			print "No undo command known"
+			print "UNDO|2|" >"/dev/fd/3"
 		}
 		foundGit = 1
 	} else {
 		print "I didn't recognize that command"
+		print "ERROR" >"/dev/fd/3"
 	}
 }
 

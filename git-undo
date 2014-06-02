@@ -42,9 +42,14 @@ while :; do
 	shift
 done
 
-awk=awk
+awk=gawk
+
 if [ $# -eq 0 ]; then
-	LC_ALL=en_US.UTF-8 $awk -f $undo || exit $?
+	LC_ALL=en_US.UTF-8 $awk -f $undo 3>/dev/null
+	retcode=$?
 else
-	LC_ALL=en_US.UTF-8 echo "$@" | $awk -f $undo || exit $?
+	out=$(LC_ALL=en_US.UTF-8 echo "$@" | $awk -f $undo 3>&1 >/dev/null 2>/dev/null)
+	retcode=$?
+	echo $out
 fi
+exit $retcode
