@@ -178,22 +178,23 @@ BEGIN {
 	}
 	if (info) {
 		print info
-		print "INFO|" info "|" >"/dev/fd/3"
+		out = "INFO|" info "|"
 		if (undo) {
 			print undo
-			print "UNDO|" undo "|" >"/dev/fd/3"
+			out = out "UNDO|" undo "|"
 		} else if (autorun) {
 			print "No undo command necessary"
-			print "UNDO|1|" >"/dev/fd/3"
+			out = out "UNDO|1|"
 		} else {
 			print "No undo command known"
-			print "UNDO|2|" >"/dev/fd/3"
+			out = out "UNDO|2|"
 		}
 		foundGit = 1
 	} else {
 		print "I didn't recognize that command"
-		print "ERROR" >"/dev/fd/3"
+		out = "ERROR"
 	}
+	print out >"/dev/fd/3"
 }
 
 END {
