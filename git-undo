@@ -50,6 +50,36 @@ if [ $# -eq 0 ]; then
 else
 	out=$(LC_ALL=en_US.UTF-8 echo "$@" | $awk -f $undo 3>&1 >/dev/null 2>/dev/null)
 	retcode=$?
-	echo $out
+	oldIFS="$IFS"
+	IFS="|"
+	set -- $out
+	IFS="$oldIFS"
+	while :; do
+		[ $# -eq 0 ] && break
+		case "$1" in
+		INFO)
+			info="$2"
+			shift
+			;;
+		UNDO)
+			if [ "$2" = "1" ]; then
+				undocmd="No undo command necessary"
+			elif [ "$2" = "2" ]; then
+				undocmd="No undo command known"
+			else
+				undocmd="$2"
+			fi
+			shift
+			;;
+		ERROR)
+			echo "I didn't recognize that command"
+			;;
+		*)
+			;;
+		esac
+		shift
+	done
+	[ -n "$info" ] && echo $info
+	[ -n "$undocmd" ] && echo $undocmd
 fi
 exit $retcode
