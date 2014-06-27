@@ -14,45 +14,6 @@ BEGIN {
 }
 
 {
-	undoCommand()
-	if (info) {
-		print info
-		print "INFO|" info "|" >"/dev/fd/3"
-		if (undo) {
-			print undo
-			print "UNDO|" undo "|" >"/dev/fd/3"
-		} else if (autorun) {
-			print "No undo command necessary"
-			print "UNDO|1|" >"/dev/fd/3"
-		} else {
-			print "No undo command known"
-			print "UNDO|2|" >"/dev/fd/3"
-		}
-		foundGit = 1
-	} else {
-		print "I didn't recognize that command"
-		print "ERROR" >"/dev/fd/3"
-	}
-}
-
-END {
-	if (!foundGit) {
-		print "I didn't find a git command"
-	}
-}
-
-function remove_options(s, c) {
-	cmd = substr(s, length(c)+1)
-	nfiles = split(cmd, parts, / /)
-	for (i=1; i<=nfiles; i++) {
-		if (!match(parts[i], /^-/)) {
-			files = files " " parts[i]
-		}
-	}
-	return substr(files, 2)
-}
-
-function undoCommand() {
 	if (/^init/) {
 		info = "This created a .git folder in the current directory. You can remove it."
 		undo = "rm -rf .git"
@@ -215,4 +176,39 @@ function undoCommand() {
 		info = "git remote (without additional arguments) doesn't change the repo; it just tells you what remotes there are. Use it often!"
 		autorun = 1
 	}
+	if (info) {
+		print info
+		print "INFO|" info "|" >"/dev/fd/3"
+		if (undo) {
+			print undo
+			print "UNDO|" undo "|" >"/dev/fd/3"
+		} else if (autorun) {
+			print "No undo command necessary"
+			print "UNDO|1|" >"/dev/fd/3"
+		} else {
+			print "No undo command known"
+			print "UNDO|2|" >"/dev/fd/3"
+		}
+		foundGit = 1
+	} else {
+		print "I didn't recognize that command"
+		print "ERROR" >"/dev/fd/3"
+	}
+}
+
+END {
+	if (!foundGit) {
+		print "I didn't find a git command"
+	}
+}
+
+function remove_options(s, c) {
+	cmd = substr(s, length(c)+1)
+	nfiles = split(cmd, parts, / /)
+	for (i=1; i<=nfiles; i++) {
+		if (!match(parts[i], /^-/)) {
+			files = files " " parts[i]
+		}
+	}
+	return substr(files, 2)
 }
